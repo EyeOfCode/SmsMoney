@@ -14,11 +14,9 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+//TODO
 class SmsReceiver : BroadcastReceiver() {
-    private val TAG = "SmsReceiver"
-
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d(TAG, "SMS received")
         if (intent?.action == "android.provider.Telephony.SMS_RECEIVED") {
             val bundle = intent.extras
             if (bundle != null) {
@@ -33,13 +31,13 @@ class SmsReceiver : BroadcastReceiver() {
                     Log.d("SmsReceiver", "Message: $messageBody")
 
                     // Call your API here
-                    sendSmsToApi(context, sender, messageBody)
+                    sendSmsToApi(sender, messageBody)
                 }
             }
         }
     }
 
-    private fun sendSmsToApi(context: Context?, sender: String, messageBody: String) {
+    private fun sendSmsToApi(sender: String, messageBody: String) {
         val retrofit = Retrofit.Builder()
             .baseUrl("https://webhook.site/77985478-b816-48a8-8f0c-74b5d24a909c")
             .addConverterFactory(GsonConverterFactory.create())

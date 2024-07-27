@@ -1,17 +1,19 @@
 package com.example.smsautoread
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
-class MainActivity : AppCompatActivity() {
+class TestLogsActivity : AppCompatActivity() {
     private val smsPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
@@ -22,25 +24,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_test_logs)
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
-            != PackageManager.PERMISSION_GRANTED) {
-            smsPermissionLauncher.launch(Manifest.permission.READ_SMS)
-        }
-
-        val openConfigPageButton: Button = findViewById(R.id.btn_config)
-        openConfigPageButton.setOnClickListener {
+        val goBackButton: Button = findViewById(R.id.btn_back)
+        goBackButton.setOnClickListener {
             val intent = Intent(this, ConfigActivity::class.java)
             startActivity(intent)
         }
 
-        val openLogsPageButton: Button = findViewById(R.id.btn_logs)
-        openLogsPageButton.setOnClickListener {
-            val intent = Intent(this, LogsActivity::class.java)
-            startActivity(intent)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
+            != PackageManager.PERMISSION_GRANTED) {
+            smsPermissionLauncher.launch(Manifest.permission.READ_SMS)
+        }else{
+            val logTextView: TextView = findViewById(R.id.logTextView)
+            val logs = readAllSms(this)
+            logTextView.text = logs
         }
     }
 }

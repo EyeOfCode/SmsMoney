@@ -3,4 +3,11 @@
     <string name="btn_config">Config</string>
     <string name="btn_logs">Logs</string>
     <string name="image_logo">image logo</string>
+    <string name="logs_sms">Logs sms</string>
+    <string name="back">Back</string>
+    <string name="header">Header</string>
+    <string name="hook">Hook</string>
+    <string name="active">Active</string>
+    <string name="update">Update</string>
+    <string name="test">Test</string>
 </resources>

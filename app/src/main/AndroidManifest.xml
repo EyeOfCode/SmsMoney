@@ -29,6 +29,7 @@
 
         <activity android:name=".ConfigActivity" />
         <activity android:name=".LogsActivity" />
+        <activity android:name=".TestLogsActivity" />
 
         <!-- Receiver to handle incoming SMS messages -->
 <!--        <receiver android:name=".SmsReceiver"-->
