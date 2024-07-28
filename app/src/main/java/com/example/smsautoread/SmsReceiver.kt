@@ -3,62 +3,70 @@ package com.example.smsautoread
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
+import android.content.SharedPreferences
 import android.telephony.SmsMessage
 import android.util.Log
-import android.widget.Toast
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 
-//TODO
-class SmsReceiver : BroadcastReceiver() {
+class SmsReceiver : BroadcastReceiver(){
+    private val logs = StringBuilder()
+
     override fun onReceive(context: Context?, intent: Intent?) {
+        logs.append("New SMS\n")
         if (intent?.action == "android.provider.Telephony.SMS_RECEIVED") {
-            val bundle = intent.extras
-            if (bundle != null) {
-                val pdus = bundle["pdus"] as Array<*>
-                for (pdu in pdus) {
-                    val smsMessage = SmsMessage.createFromPdu(pdu as ByteArray)
-                    val sender = smsMessage.displayOriginatingAddress
-                    val messageBody = smsMessage.messageBody
+            if (context != null) {
+                val bundle = intent.extras
+                if (bundle != null) {
+                    val pdus = bundle["pdus"] as Array<*>
+                    for (pdu in pdus) {
+                        val smsMessage = SmsMessage.createFromPdu(pdu as ByteArray)
+                        val sender = smsMessage.displayOriginatingAddress
+                        val messageBody = smsMessage.messageBody
 
-                    Toast.makeText(context, "New SMS received: $messageBody", Toast.LENGTH_SHORT).show()
-                    Log.d("SmsReceiver", "Sender: $sender")
-                    Log.d("SmsReceiver", "Message: $messageBody")
+                        logs.append("SMS received: $messageBody\n")
+                        logs.append("Sender: $sender\n")
+                        logs.append("Message: $messageBody\n\n")
 
-                    // Call your API here
-                    sendSmsToApi(sender, messageBody)
+                        // Schedule work using WorkManager
+                        scheduleSmsWork(context, sender, messageBody)
+                        sendUpdateBroadcast(context, sender, messageBody)
+                    }
                 }
             }
         }
+        context?.let { saveLogsToPreferences(it, logs.toString()) }
     }
 
-    private fun sendSmsToApi(sender: String, messageBody: String) {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://webhook.site/77985478-b816-48a8-8f0c-74b5d24a909c")
-            .addConverterFactory(GsonConverterFactory.create())
+    private fun saveLogsToPreferences(context: Context, logData: String) {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("sms_logs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("logs", logData)
+        editor.apply()
+    }
+
+    private fun scheduleSmsWork(context: Context, sender: String, messageBody: String) {
+        // Create input data for the worker
+        val inputData = Data.Builder()
+            .putString("sender", sender)
+            .putString("messageBody", messageBody)
             .build()
 
-        val apiService = retrofit.create(ApiService::class.java)
-        val smsData = SmsData(sender, messageBody)
+        // Create a OneTimeWorkRequest
+        val workRequest = OneTimeWorkRequest.Builder(SmsWorker::class.java)
+            .setInputData(inputData)
+            .build()
 
-        val call = apiService.sendSmsData(smsData)
-        call.enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if (response.isSuccessful) {
-                    Log.d("SmsReceiver", "SMS data sent successfully")
-                } else {
-                    Log.e("SmsReceiver", "Failed to send SMS data")
-                }
-            }
+        // Enqueue the work request
+        WorkManager.getInstance(context).enqueue(workRequest)
+    }
 
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("SmsReceiver", "Error: ${t.message}")
-            }
-        })
+    private fun sendUpdateBroadcast(context: Context, sender: String, messageBody: String) {
+        val intent = Intent("com.example.smsautoread.SMS_RECEIVED")
+        intent.putExtra("sender", sender)
+        intent.putExtra("messageBody", messageBody)
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
     }
 }

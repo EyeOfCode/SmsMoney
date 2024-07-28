@@ -13,26 +13,30 @@
         android:layout_marginEnd="19dp"
         android:layout_marginBottom="16dp"
         android:text="@string/back"
-        app:layout_constraintBottom_toTopOf="@+id/logTextView"
+        app:layout_constraintBottom_toTopOf="@+id/scroll_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/logTextView"
+    <ScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_height="0dp"
         android:layout_margin="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="49dp"
-        android:layout_marginEnd="16dp"
-        android:background="#F0F0F0"
-        android:padding="8dp"
-        android:text="@string/logs_sms"
-        android:textColor="#000000"
-        android:textSize="16sp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_back" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_back">
+
+        <TextView
+            android:id="@+id/logTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#F0F0F0"
+            android:padding="8dp"
+            android:text="@string/logs_sms"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

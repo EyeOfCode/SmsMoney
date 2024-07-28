@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Feature declaration -->
     <uses-feature
         android:name="android.hardware.telephony"
@@ -32,18 +36,18 @@
         <activity android:name=".TestLogsActivity" />
 
         <!-- Receiver to handle incoming SMS messages -->
-<!--        <receiver android:name=".SmsReceiver"-->
-<!--            android:exported="true">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.provider.Telephony.SMS_RECEIVED" />-->
-<!--            </intent-filter>-->
-<!--        </receiver>-->
+        <receiver
+            android:name=".SmsReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".ForegroundService"
+            android:exported="false"/>
 
     </application>
-
-    <!-- Permissions required to receive SMS and access the internet -->
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>

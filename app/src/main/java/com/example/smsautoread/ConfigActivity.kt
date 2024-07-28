@@ -11,10 +11,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.gson.stream.JsonToken
 
 class ConfigActivity  : AppCompatActivity() {
     private lateinit var inputUrl: EditText
     private lateinit var inputHeader: EditText
+    private  lateinit var inputToken: EditText
     private lateinit var toggleActive: SwitchMaterial
     private lateinit var updateButton: MaterialButton
     private lateinit var sharedPreferences: SharedPreferences
@@ -27,6 +29,8 @@ class ConfigActivity  : AppCompatActivity() {
         val goBackButton: Button = findViewById(R.id.btn_back)
         goBackButton.setOnClickListener {
             // Finish this activity and return to the first activity
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
             finish()
         }
 
@@ -37,6 +41,7 @@ class ConfigActivity  : AppCompatActivity() {
         }
 
         inputUrl = findViewById(R.id.input_url)
+        inputToken = findViewById(R.id.input_token)
         inputHeader = findViewById(R.id.input_header)
         toggleActive = findViewById(R.id.toggle_active)
         updateButton = findViewById(R.id.btn_update)
@@ -55,6 +60,7 @@ class ConfigActivity  : AppCompatActivity() {
     private fun saveData() {
         val editor = sharedPreferences.edit()
         editor.putString("url", inputUrl.text.toString())
+        editor.putString("token", inputToken.text.toString())
         editor.putString("header", inputHeader.text.toString())
         editor.putBoolean("active", toggleActive.isChecked)
         editor.apply()
@@ -62,10 +68,12 @@ class ConfigActivity  : AppCompatActivity() {
 
     private fun loadSavedData() {
         val url = sharedPreferences.getString("url", "")
+        val token = sharedPreferences.getString("token", "")
         val header = sharedPreferences.getString("header", "")
         val isActive = sharedPreferences.getBoolean("active", false)
 
         inputUrl.setText(url)
+        inputToken.setText(token)
         inputHeader.setText(header)
         toggleActive.isChecked = isActive
     }

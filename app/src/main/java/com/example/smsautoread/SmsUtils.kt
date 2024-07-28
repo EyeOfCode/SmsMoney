@@ -2,13 +2,12 @@ package com.example.smsautoread
 
 import android.content.Context
 import android.provider.Telephony
-import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 fun readAllSms(context: Context): String {
-    val smsUri = Telephony.Sms.CONTENT_URI
+    val smsUri = Telephony.Sms.Inbox.CONTENT_URI
     val projection = arrayOf(
         Telephony.Sms._ID,
         Telephony.Sms.ADDRESS,
@@ -35,8 +34,8 @@ fun readAllSms(context: Context): String {
             val date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(dateMillis))
 
             // Process or display the SMS details
-            logs.append("SMS", "ID: $id\nAddress: $address\nBody: $body\nDate: $date\n")
+            logs.append("ID: $id\nAddress: $address\nBody: $body\nDate: $date\n\n")
         }
-    } ?: logs.append("SMS", "No SMS messages found.")
+    } ?: logs.append("No SMS messages found.")
     return logs.toString()
 }

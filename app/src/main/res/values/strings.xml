@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Sms auto read</string>
+    <string name="app_name">Sms money</string>
     <string name="btn_config">Config</string>
     <string name="btn_logs">Logs</string>
     <string name="image_logo">image logo</string>
@@ -10,4 +10,5 @@
     <string name="active">Active</string>
     <string name="update">Update</string>
     <string name="test">Test</string>
+    <string name="token">Token</string>
 </resources>

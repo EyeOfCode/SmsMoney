@@ -2,7 +2,9 @@ package com.example.smsautoread
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -14,13 +16,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
 class TestLogsActivity : AppCompatActivity() {
+    private val logs = StringBuilder()
+    private lateinit var logTextView: TextView
+
     private val smsPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
                 // Permission granted, proceed with functionality
             } else {
                 // Permission denied, handle accordingly
-                Log.d("SMS", "SMS read permission denied")
+                logTextView = findViewById(R.id.logTextView)
+                logs.append("SMS read permission denied")
+                logTextView.text = logs
             }
         }
 
@@ -33,6 +40,7 @@ class TestLogsActivity : AppCompatActivity() {
         goBackButton.setOnClickListener {
             val intent = Intent(this, ConfigActivity::class.java)
             startActivity(intent)
+            finish()
         }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
