@@ -7,17 +7,40 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.ScrollView
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class LogsActivity : AppCompatActivity() {
     private lateinit var logTextView: TextView
+    private val logsViewModel: LogsViewModel by viewModels { LogsViewModelFactory(this) }
 
-    private fun getLogsFromPreferences(): String {
-        val sharedPreferences: SharedPreferences = getSharedPreferences("sms_logs", Context.MODE_PRIVATE)
-        return sharedPreferences.getString("logs", "No logs available.") ?: ""
+    @SuppressLint("MissingInflatedId")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_logs)
+
+        logTextView = findViewById(R.id.logTextView)
+
+        loadLogsFromPreferences()
+
+        // Observe changes to logs and update UI
+        logsViewModel.logs.observe(this) { logs ->
+            logTextView.text = logs
+        }
+
+        // Register the local broadcast receiver
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(smsUpdateReceiver, IntentFilter("com.example.smsautoread.SMS_RECEIVED"))
+
+        val goBackButton: Button = findViewById(R.id.btn_back)
+        goBackButton.setOnClickListener {
+            finish()
+        }
     }
 
     override fun onDestroy() {
@@ -26,29 +49,29 @@ class LogsActivity : AppCompatActivity() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(smsUpdateReceiver)
     }
 
-    @SuppressLint("MissingInflatedId")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_logs)
-        displayLogs()
-
-        val goBackButton: Button = findViewById(R.id.btn_back)
-        goBackButton.setOnClickListener {
-            finish()
+    private val smsUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            // Update the logs when a new SMS is received
+            val sender = intent?.getStringExtra("sender") ?: "Unknown Sender"
+            val messageBody = intent?.getStringExtra("messageBody") ?: "No Message"
+            val date = intent?.getStringExtra("date") ?: "No Message"
+            val newLog = "New SMS from Sender: $sender\nMessage: $messageBody\nDate: $date\n\n"
+            logsViewModel.addLog(newLog)
+            scrollToBottom()
         }
     }
 
-    private fun displayLogs() {
-        logTextView = findViewById(R.id.logTextView)
-        LocalBroadcastManager.getInstance(this).registerReceiver(smsUpdateReceiver, IntentFilter("com.example.smsautoread.SMS_RECEIVED"))
-        val logs = getLogsFromPreferences()
+    private fun loadLogsFromPreferences() {
+        val sharedPreferencesSmsLogs: SharedPreferences = getSharedPreferences("worker_logs", Context.MODE_PRIVATE)
+        val logs = sharedPreferencesSmsLogs.getString("logs", "") ?: ""
+        logsViewModel.setLogs(logs)
         logTextView.text = logs
+        scrollToBottom()
     }
 
-    private val smsUpdateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val logs = getLogsFromPreferences()
-            logTextView.text = logs
+    private fun scrollToBottom() {
+        findViewById<ScrollView>(R.id.scroll_view).post {
+            findViewById<ScrollView>(R.id.scroll_view).fullScroll(View.FOCUS_DOWN)
         }
     }
 }
