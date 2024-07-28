@@ -17,6 +17,7 @@ import java.util.Locale
 class SmsReceiver : BroadcastReceiver(){
     private val logs = StringBuilder()
 
+    //TODO check name sms addressIndex
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action == "android.provider.Telephony.SMS_RECEIVED") {
             if (context != null) {
