@@ -2,7 +2,10 @@ package com.example.smsautoread
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import okhttp3.OkHttpClient
@@ -15,30 +18,36 @@ class SmsWorker(context: Context, workerParams: WorkerParameters) : Worker(conte
     private val sharedPreferencesData: SharedPreferences =
         context.getSharedPreferences("config_data", Context.MODE_PRIVATE)
     private val sharedPreferencesSmsLogs: SharedPreferences = context.getSharedPreferences("worker_logs", Context.MODE_PRIVATE)
+    private val logs = StringBuilder()
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun doWork(): Result {
-        Log.d("WorkerSMS","Worker start\n")
         // Retrieve data from inputData
         val sender = inputData.getString("sender") ?: return Result.failure()
         val messageBody = inputData.getString("messageBody") ?: return Result.failure()
         val date = inputData.getString("date") ?: return Result.failure()
 
-        val newLog = "Sender: $sender\nMessage: $messageBody\nDate: $date\n\n"
-        Log.d("WorkerSMS", newLog)
-
         // Send SMS data to API
-        val url = sharedPreferencesData.getString("url", null)
-        val token = sharedPreferencesData.getString("token", null)
-        if (url != null) {
-            sendSmsToApi(url, token, sender, messageBody, date)
+        val url = sharedPreferencesData.getString("url", "")
+        val token = sharedPreferencesData.getString("token", "")
+        val header = sharedPreferencesData.getString("header", "")
+        if (url != null && url !== "") {
+            if(header.toString() == "" || header.toString() == sender) {
+                val newLog = "Sender: $sender\nMessage: $messageBody\nDate: $date\n"
+                logs.append(newLog)
+                sendSmsToApi(url, token, sender, messageBody, date, logs)
+            }else{
+                logs.append("Sender not match header\n")
+            }
         }
 
-        saveLogsToPreferences(newLog)
+        logs.append("###################\n\n")
+        saveLogsToPreferences(logs.toString())
 
         return Result.success()
     }
 
-    private fun sendSmsToApi(url: String, token: String?, sender: String, messageBody: String, date: String) {
+    private fun sendSmsToApi(url: String, token: String?, sender: String, messageBody: String, date: String, logs: StringBuilder) {
         try {
             val httpClientBuilder  = OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
@@ -61,18 +70,30 @@ class SmsWorker(context: Context, workerParams: WorkerParameters) : Worker(conte
             apiService.sendSmsData(smsData).enqueue(object : retrofit2.Callback<ResponseBody> {
                 override fun onResponse(call: retrofit2.Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
                     if (response.isSuccessful) {
-                        Log.d("WorkerSMS","SMS data sent successfully\n\n")
+                        Log.d("status_sms", "SMS data sent successfully\n\n")
+                        handler.post {
+                            Toast.makeText(applicationContext, "SMS data sent successfully!", Toast.LENGTH_SHORT).show()
+                        }
                     } else {
-                        Log.d("WorkerSMS","Failed to send SMS data\n\n")
+                        Log.d("status_sms","Failed to send SMS data\n\n")
+                        handler.post {
+                            Toast.makeText(applicationContext, "Failed to send SMS data.", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
 
                 override fun onFailure(call: retrofit2.Call<ResponseBody>, t: Throwable) {
-                    Log.d("WorkerSMS","Error: ${t.message}")
+                    Log.d("status_sms","WorkerSMS Error: ${t.message}\n\n")
+                    handler.post {
+                        Toast.makeText(applicationContext, "WorkerSMS Error: ${t.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             })
         } catch (t: Throwable) {
-            Log.d("WorkerSMS","Error: worker not running\n ${t.message}")
+            Log.d("status_sms","WorkerSMS Error: worker not running\n ${t.message}\n\n")
+            handler.post {
+                Toast.makeText(applicationContext, "WorkerSMS Error: ${t.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 

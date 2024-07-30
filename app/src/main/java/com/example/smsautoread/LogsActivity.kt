@@ -55,8 +55,9 @@ class LogsActivity : AppCompatActivity() {
             val sender = intent?.getStringExtra("sender") ?: "Unknown Sender"
             val messageBody = intent?.getStringExtra("messageBody") ?: "No Message"
             val date = intent?.getStringExtra("date") ?: "No Message"
-            val newLog = "New SMS from Sender: $sender\nMessage: $messageBody\nDate: $date\n\n"
+            val newLog = "New SMS from Sender: $sender\nMessage: $messageBody\nDate: $date"
             logsViewModel.addLog(newLog)
+            logsViewModel.addLog("###################\n")
             scrollToBottom()
         }
     }

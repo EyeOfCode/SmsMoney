@@ -15,49 +15,40 @@ import java.util.Date
 import java.util.Locale
 
 class SmsReceiver : BroadcastReceiver(){
-    private val logs = StringBuilder()
-
     //TODO check name sms addressIndex
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action == "android.provider.Telephony.SMS_RECEIVED") {
             if (context != null) {
                 val sharedPreferencesData: SharedPreferences = context.getSharedPreferences("config_data", Context.MODE_PRIVATE)
                 val active = sharedPreferencesData.getBoolean("active", false)
+                val header = sharedPreferencesData.getString("header", "")
                 if(active) {
                     val bundle = intent.extras
                     if (bundle != null) {
-                        val pdus = bundle["pdus"] as Array<*>
-                        logs.append("New SMS\n")
-                        for (pdu in pdus) {
+                        val pdus = bundle.get("pdus") as Array<*>?
+                        val messages = mutableListOf<SmsMessage>()
+                        pdus?.forEach { pdu ->
                             val smsMessage = SmsMessage.createFromPdu(pdu as ByteArray)
-                            val sender = smsMessage.displayOriginatingAddress
-                            val messageBody = smsMessage.messageBody
-                            val timestampMillis = smsMessage.timestampMillis
+                            messages.add(smsMessage)
+                        }
 
-                            // Format the timestamp
-                            val dateFormat =
-                                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                            val dateString = dateFormat.format(Date(timestampMillis))
+                        // Combine the messages if needed
+                        val fullMessage = messages.joinToString(separator = "") { it.messageBody }
+                        val sender = messages[0].displayOriginatingAddress
+                        val timestampMillis = messages[0].timestampMillis
 
-                            val newLog = "Sender: $sender\nMessage: $messageBody\nDate: $dateString\n\n"
-                            logs.append(newLog)
+                        // Format the timestamp
+                        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                        val dateString = dateFormat.format(Date(timestampMillis))
 
-                            saveLogsToPreferences(context, logs.toString())
-                            scheduleSmsWork(context, sender, messageBody, dateString)
-                            sendUpdateBroadcast(context, sender, messageBody, dateString)
+                        if(header.toString() == "" || header.toString() == sender) {
+                            scheduleSmsWork(context, sender, fullMessage, dateString)
+                            sendUpdateBroadcast(context, sender, fullMessage, dateString)
                         }
                     }
                 }
             }
         }
-        context?.let { saveLogsToPreferences(it, logs.toString()) }
-    }
-
-    private fun saveLogsToPreferences(context: Context, logData: String) {
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences("sms_logs", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString("logs", logData)
-        editor.apply()
     }
 
     private fun scheduleSmsWork(context: Context, sender: String, messageBody: String, date: String) {

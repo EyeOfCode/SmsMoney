@@ -53,6 +53,8 @@ class ConfigActivity  : AppCompatActivity() {
         updateButton.setOnClickListener {
             saveData()
             Toast.makeText(this, "Config updated", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
             finish()
         }
     }
