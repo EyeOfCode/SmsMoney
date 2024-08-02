@@ -39,9 +39,9 @@ class SmsWorker(context: Context, workerParams: WorkerParameters) : Worker(conte
             }else{
                 logs.append("Sender not match header\n")
             }
+            logs.append("###################\n\n")
         }
 
-        logs.append("###################\n\n")
         saveLogsToPreferences(logs.toString())
 
         return Result.success()
