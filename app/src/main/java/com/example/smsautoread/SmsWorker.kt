@@ -35,19 +35,20 @@ class SmsWorker(context: Context, workerParams: WorkerParameters) : Worker(conte
             if(header.toString() == "" || header.toString() == sender) {
                 val newLog = "Sender: $sender\nMessage: $messageBody\nDate: $date\n"
                 logs.append(newLog)
-                sendSmsToApi(url, token, sender, messageBody, date, logs)
+                sendSmsToApi(url, token, sender, messageBody, date)
+                logs.append("#########SUCCESS#########\n\n")
+                saveLogsToPreferences(logs.toString())
             }else{
                 logs.append("Sender not match header\n")
+                logs.append("#########ERROR#########\n\n")
+                saveLogsToPreferences(logs.toString())
             }
-            logs.append("###################\n\n")
         }
-
-        saveLogsToPreferences(logs.toString())
 
         return Result.success()
     }
 
-    private fun sendSmsToApi(url: String, token: String?, sender: String, messageBody: String, date: String, logs: StringBuilder) {
+    private fun sendSmsToApi(url: String, token: String?, sender: String, messageBody: String, date: String) {
         try {
             val httpClientBuilder  = OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
